@@ -9,7 +9,7 @@ function CircuitGridModel:new (o, max_wires, max_columns)
     self.max_wires = max_wires or 0
     self.max_columns = max_columns or 0
     self.create_nodes_array(o)
-    self.latest_computed_circuit = None
+    self.latest_computed_circuit = nil
     return o
 end
 
@@ -19,6 +19,7 @@ function CircuitGridModel:to_string ()
         retval = retval .. '\n'
         for column_num = 1, self.max_columns do
             retval = retval .. tostring(self.nodes[wire_num][column_num].node_type) .. ', ' 
+            -- TODO: use get_node_gate_part() instead
         end
     end
     return 'CircuitGridModel: ' .. retval
@@ -41,11 +42,14 @@ end
 
 
 function CircuitGridModel:set_node (wire_num, column_num, circuit_grid_node)
-  -- First, embed the wire and column locations in the node
+    -- First, embed the wire and column locations in the node
     circuit_grid_node.wire_num = wire_num
     circuit_grid_node.column_num = column_num
     self.nodes[wire_num][column_num] = circuit_grid_node
-  
+end
+
+function CircuitGridModel:get_node (wire_num, column_num)
+    return self.nodes[wire_num][column_num]
 end
 
 ----------------------------------------
@@ -82,3 +86,4 @@ print(circuit_grid_model:to_string())
 
 circuit_grid_model:set_node(1, 2, CircuitGridNode:new{node_type = CircuitNodeTypes.Z, radians = math.pi})
 print(circuit_grid_model:to_string())
+
