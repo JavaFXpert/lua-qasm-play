@@ -184,9 +184,38 @@ function CircuitGridModel:compute_circuit()
                             -- Controlled Y gate
                             qasm_str = qasm_str .. 'cy q[' .. tostring(node.ctrl_a) .. '],'
                             qasm_str = qasm_str .. 'q[' .. tostring(wire_num) .. '],'
+                        else
+                            -- Pauli-Y gate
+                            qasm_str = qasm_str .. 'y q[' .. tostring(wire_num) .. '];\n'
+                        end
+                    else
+                        -- Rotation around Y axis
+                        qasm_str = qasm_str .. 'ry(' .. tostring(node.radians) .. ') '
+                        qasm_str = qasm_str .. 'q[' .. tostring(wire_num) .. '];\n'
+                    end
+                elseif node.node_type == CircuitNodeTypes.Z then
+                    if node.radians == 0 then
+                        if node.ctrl_a ~= -1 then
+                            -- Controlled Z gate
+                            qasm_str = qasm_str .. 'cz q[' .. tostring(node.ctrl_a) .. '],'
+                            qasm_str = qasm_str .. 'q[' .. tostring(wire_num) .. '],'
+                        else
+                            -- Pauli-Z gate
+                            qasm_str = qasm_str .. 'z q[' .. tostring(wire_num) .. '];\n'
+                        end
+                    else
+                        if node.ctrl_a ~= -1 then
+                            -- Controlled rotation around the Z axis
+                            qasm_str = qasm_str .. 'rz(' .. tostring(node.radians) .. ') '
+                            qasm_str = qasm_str .. 'q[' .. tostring(wire_num) .. '];\n'
+                            qc.crz(node.radians, qr[node.ctrl_a], qr[wire_num])  
+                        else
+                            -- Rotation around Z axis
+                            qasm_str = qasm_str .. 'rz(' .. tostring(node.radians) .. ') '
+                            qasm_str = qasm_str .. 'q[' .. tostring(node.ctrl_a) .. '],'
+                            qasm_str = qasm_str .. 'q[' .. tostring(wire_num) .. '];\n'
                         end
                     end
-                    
                 end
             end
          end
@@ -199,17 +228,9 @@ function CircuitGridModel:compute_circuit()
     -- TODO: Implement following lines
     --[[
 
-                    elif node.node_type == node_types.Y:
-                        if node.radians == 0:
-                            if node.ctrl_a != -1:
-                                # Controlled Y gate
-                                qc.cy(qr[node.ctrl_a], qr[wire_num])
-                            else:
-                                # Pauli-Y gate
-                                qc.y(qr[wire_num])
-                        else:
-                            # Rotation around Y axis
-                            qc.ry(node.radians, qr[wire_num])
+x                        else:
+x                            # Rotation around Y axis
+x                            qc.ry(node.radians, qr[wire_num])
                     elif node.node_type == node_types.Z:
                         if node.radians == 0:
                             if node.ctrl_a != -1:
