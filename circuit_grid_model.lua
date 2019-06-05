@@ -13,6 +13,7 @@ function CircuitGridModel:new (o, max_wires, max_columns)
     return o
 end
 
+
 function CircuitGridModel:to_string ()
     local retval = ''
     for wire_num = 1, self.max_wires do
@@ -25,6 +26,7 @@ function CircuitGridModel:to_string ()
     end
     return 'CircuitGridModel: ' .. retval
 end
+
 
 function CircuitGridModel:create_nodes_array ()
     self.nodes = {}
@@ -49,9 +51,11 @@ function CircuitGridModel:set_node (wire_num, column_num, circuit_grid_node)
     self.nodes[wire_num][column_num] = circuit_grid_node
 end
 
+
 function CircuitGridModel:get_node (wire_num, column_num)
     return self.nodes[wire_num][column_num]
 end
+
 
 function CircuitGridModel:get_node_gate_part (wire_num, column_num)
     local requested_node = self.nodes[wire_num][column_num]
@@ -76,6 +80,7 @@ function CircuitGridModel:get_node_gate_part (wire_num, column_num)
     return CircuitNodeTypes.EMPTY   
 end
 
+
 --[[
 x    def get_node_gate_part(self, wire_num, column_num):
 x        requested_node = self.nodes[wire_num][column_num]
@@ -97,6 +102,140 @@ x            nodes_in_column = self.nodes[:, column_num]
         return node_types.EMPTY
 
 --]]
+
+function CircuitGridModel:get_gate_wire_for_control_node(control_wire_num, column_num)
+    -- TODO: Implement following lines
+    --[[
+        -- Get wire for gate that belongs to a control node on the given wire
+        gate_wire_num = -1
+        nodes_in_column = self.nodes[:, column_num]
+        for wire_idx in range(self.max_wires):
+            if wire_idx != control_wire_num:
+                other_node = nodes_in_column[wire_idx]
+                if other_node:
+                    if other_node.ctrl_a == control_wire_num or \
+                            other_node.ctrl_b == control_wire_num:
+                        gate_wire_num =  wire_idx
+                        # print("Found gate: ",
+                        #       self.get_node_gate_part(gate_wire_num, column_num),
+                        #       " on wire: " , gate_wire_num)
+        return gate_wire_num
+    --]]
+end
+
+
+function CircuitGridModel:get_rotation_gate_nodes()
+    -- TODO: Implement following lines
+    --[[
+        rot_gate_nodes = []
+        for column_num in range(self.max_columns):
+            for wire_num in range(self.max_wires):
+                node = self.nodes[wire_num][column_num]
+                if node and node.ctrl_a == -1:
+                    if node.node_type == node_types.X or \
+                            node.node_type == node_types.Y or \
+                            node.node_type == node_types.Z:
+                        rot_gate_nodes.append(node)
+        return rot_gate_nodes
+    --]]
+end
+
+
+function CircuitGridModel:compute_circuit()
+    local qasm_str = 'OPENQASM 2.0;\ninclude "qelib1.inc";'
+    qasm_str = qasm_str .. 'qreg q[' .. tostring(3) .. '];'
+    
+    return qasm_str
+    
+    
+    
+    -- TODO: Implement following lines
+    --[[
+        qr = QuantumRegister(self.max_wires, 'q')
+        qc = QuantumCircuit(qr)
+
+        # Add a column of identity gates to protect simulators from an empty circuit
+        qc.iden(qr)
+
+        for column_num in range(self.max_columns):
+            for wire_num in range(self.max_wires):
+                node = self.nodes[wire_num][column_num]
+                if node:
+                    if node.node_type == node_types.IDEN:
+                        # Identity gate
+                        qc.iden(qr[wire_num])
+                    elif node.node_type == node_types.X:
+                        if node.radians == 0:
+                            if node.ctrl_a != -1:
+                                if node.ctrl_b != -1:
+                                    # Toffoli gate
+                                    qc.ccx(qr[node.ctrl_a], qr[node.ctrl_b], qr[wire_num])
+                                else:
+                                    # Controlled X gate
+                                    qc.cx(qr[node.ctrl_a], qr[wire_num])
+                            else:
+                                # Pauli-X gate
+                                qc.x(qr[wire_num])
+                        else:
+                            # Rotation around X axis
+                            qc.rx(node.radians, qr[wire_num])
+                    elif node.node_type == node_types.Y:
+                        if node.radians == 0:
+                            if node.ctrl_a != -1:
+                                # Controlled Y gate
+                                qc.cy(qr[node.ctrl_a], qr[wire_num])
+                            else:
+                                # Pauli-Y gate
+                                qc.y(qr[wire_num])
+                        else:
+                            # Rotation around Y axis
+                            qc.ry(node.radians, qr[wire_num])
+                    elif node.node_type == node_types.Z:
+                        if node.radians == 0:
+                            if node.ctrl_a != -1:
+                                # Controlled Z gate
+                                qc.cz(qr[node.ctrl_a], qr[wire_num])
+                            else:
+                                # Pauli-Z gate
+                                qc.z(qr[wire_num])
+                        else:
+                            if node.ctrl_a != -1:
+                                # Controlled rotation around the Z axis
+                                qc.crz(node.radians, qr[node.ctrl_a], qr[wire_num])
+                            else:
+                                # Rotation around Z axis
+                                qc.rz(node.radians, qr[wire_num])
+                    elif node.node_type == node_types.S:
+                        # S gate
+                        qc.s(qr[wire_num])
+                    elif node.node_type == node_types.SDG:
+                        # S dagger gate
+                        qc.sdg(qr[wire_num])
+                    elif node.node_type == node_types.T:
+                        # T gate
+                        qc.t(qr[wire_num])
+                    elif node.node_type == node_types.TDG:
+                        # T dagger gate
+                        qc.tdg(qr[wire_num])
+                    elif node.node_type == node_types.H:
+                        if node.ctrl_a != -1:
+                            # Controlled Hadamard
+                            qc.ch(qr[node.ctrl_a], qr[wire_num])
+                        else:
+                            # Hadamard gate
+                            qc.h(qr[wire_num])
+                    elif node.node_type == node_types.SWAP:
+                        if node.ctrl_a != -1:
+                            # Controlled Swap
+                            qc.cswap(qr[node.ctrl_a], qr[wire_num], qr[node.swap])
+                        else:
+                            # Swap gate
+                            qc.swap(qr[wire_num], qr[node.swap])
+
+        self.latest_computed_circuit = qc
+        return qc
+    --]]
+end
 
 ----------------------------------------
 -- CircuitGridNode definitions
@@ -168,4 +307,8 @@ circuit_grid_model:set_node(3, 12, CircuitGridNode:new{node_type = CircuitNodeTy
 circuit_grid_model:set_node(1, 13, CircuitGridNode:new{node_type = CircuitNodeTypes.X, 0, 1, 2})
 
 print(circuit_grid_model:to_string())
+
+print('qasm: ', circuit_grid_model:compute_circuit())
+
+
 
