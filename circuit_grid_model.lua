@@ -3,7 +3,7 @@
 CircuitGridModel = {nodes = nil}
 
 function CircuitGridModel:new (o, max_wires, max_columns)
-    o = o or {}
+    local o = o or {}
     setmetatable(o, self)
     self.__index = self
     self.max_wires = max_wires or 0
@@ -33,9 +33,20 @@ function CircuitGridModel:create_nodes_array ()
     
      for j=1, self.max_columns do
         self.nodes[i][j] = CircuitGridNode:new(nil)
+        print("self.nodes[i][j]: ", self.nodes[i][j])
+        print("self.nodes[i][j].node_type: ", self.nodes[i][j].node_type)
      end
     
   end
+end
+
+
+function CircuitGridModel:set_node (wire_num, column_num, circuit_grid_node)
+  -- First, embed the wire and column locations in the node
+    circuit_grid_node.wire_num = wire_num
+    circuit_grid_node.column_num = column_num
+    self.nodes[wire_num][column_num] = circuit_grid_node
+  
 end
 
 ----------------------------------------
@@ -43,7 +54,7 @@ end
 CircuitGridNode = {}
 
 function CircuitGridNode:new (o, node_type, radians, ctrl_a, ctrl_b, swap)
-    o = o or {}
+    local o = o or {}
     setmetatable(o, self)
     self.__index = self
     self.node_type = node_type or -1 --TODO: Use CircuitNodeTypes EMPTY here
@@ -62,10 +73,17 @@ end
 
 ----------------------------------------
 -- Main
-myCircuit = CircuitGridModel:new(nil,3, 7)
+circuit_grid_model = CircuitGridModel:new(nil,3, 7)
 
-print(myCircuit:to_string())
+print(circuit_grid_model:to_string())
 
 homeDir = os.getenv("HOME")
 dofile (homeDir.."/PycharmProjects/lua-qasm-play/circuit_node_types.lua")
+
+local my_node = CircuitGridNode:new(nil, CircuitNodeTypes.Y, math.pi)
+--local my_node = CircuitGridNode:new(nil)
+print("my_node: ", my_node)
+print("my_node.node_type: ", my_node.node_type)
+--print("my_node: ", my_node.to_string())
+--circuit_grid_model.set_node(0, 0, my_node)
 print (CircuitNodeTypes.Y)
