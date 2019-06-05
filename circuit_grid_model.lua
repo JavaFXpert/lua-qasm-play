@@ -142,43 +142,63 @@ end
 
 
 function CircuitGridModel:compute_circuit()
-    local qasm_str = 'OPENQASM 2.0;\ninclude "qelib1.inc";'
-    qasm_str = qasm_str .. 'qreg q[' .. tostring(3) .. '];'
+    local qasm_str = 'OPENQASM 2.0;\ninclude "qelib1.inc";\n'
+    qasm_str = qasm_str .. 'qreg q[' .. tostring(self.max_wires) .. '];\n'
+    qasm_str = qasm_str .. 'creg q[' .. tostring(self.max_wires) .. '];\n'
     
+    -- Add a column of identity gates to protect simulators from an empty circuit
+    qasm_str = qasm_str .. 'id q;\n'
+    
+    for column_num = 1, self.max_columns do
+        for wire_num = 1, self.max_wires do
+            local node = self.nodes[wire_num][column_num]
+            if node then
+                if node.node_type == CircuitNodeTypes.IDEN then
+                    -- Identity gate
+                    qasm_str = qasm_str .. 'id q[' .. tostring(wire_num) .. '];\n'
+                elseif node.node_type == CircuitNodeTypes.X then
+                    if node.radians == 0 then
+                        if node.ctrl_a ~= -1 then
+                            if node.ctrl_b ~= -1 then
+                                -- Toffoli gate
+                                qasm_str = qasm_str .. 'ccx q[' .. tostring(node.ctrl_a) .. '],'
+                                qasm_str = qasm_str .. 'q[' .. tostring(node.ctrl_b) .. '],'
+                                qasm_str = qasm_str .. 'q[' .. tostring(wire_num) .. '] ;\n'
+                            else
+                                -- Controlled X gate
+                                qasm_str = qasm_str .. 'cx q[' .. tostring(node.ctrl_a) .. '],'
+                                qasm_str = qasm_str .. 'q[' .. tostring(wire_num) .. '],'
+                            end
+                        else
+                            -- Pauli-X gate
+                            qasm_str = qasm_str .. 'x q[' .. tostring(wire_num) .. '];\n'
+                        end
+                    else
+                        -- Rotation around X axis
+                        qasm_str = qasm_str .. 'rx(' .. tostring(node.radians) .. ') '
+                        qasm_str = qasm_str .. 'q[' .. tostring(wire_num) .. '];\n'
+                    end
+                elseif node.node_type == CircuitNodeTypes.Y then
+                    if node.radians == 0 then
+                        if node.ctrl_a ~= -1 then
+                            -- Controlled Y gate
+                            qasm_str = qasm_str .. 'cy q[' .. tostring(node.ctrl_a) .. '],'
+                            qasm_str = qasm_str .. 'q[' .. tostring(wire_num) .. '],'
+                        end
+                    end
+                    
+                end
+            end
+         end
+     end
+     
     return qasm_str
     
     
     
     -- TODO: Implement following lines
     --[[
-        qr = QuantumRegister(self.max_wires, 'q')
-        qc = QuantumCircuit(qr)
 
-        # Add a column of identity gates to protect simulators from an empty circuit
-        qc.iden(qr)
-
-        for column_num in range(self.max_columns):
-            for wire_num in range(self.max_wires):
-                node = self.nodes[wire_num][column_num]
-                if node:
-                    if node.node_type == node_types.IDEN:
-                        # Identity gate
-                        qc.iden(qr[wire_num])
-                    elif node.node_type == node_types.X:
-                        if node.radians == 0:
-                            if node.ctrl_a != -1:
-                                if node.ctrl_b != -1:
-                                    # Toffoli gate
-                                    qc.ccx(qr[node.ctrl_a], qr[node.ctrl_b], qr[wire_num])
-                                else:
-                                    # Controlled X gate
-                                    qc.cx(qr[node.ctrl_a], qr[wire_num])
-                            else:
-                                # Pauli-X gate
-                                qc.x(qr[wire_num])
-                        else:
-                            # Rotation around X axis
-                            qc.rx(node.radians, qr[wire_num])
                     elif node.node_type == node_types.Y:
                         if node.radians == 0:
                             if node.ctrl_a != -1:
@@ -283,32 +303,34 @@ circuit_grid_model:set_node(1, 4, CircuitGridNode:new{node_type = CircuitNodeTyp
 circuit_grid_model:set_node(2, 4, CircuitGridNode:new{node_type = CircuitNodeTypes.TDG})
 circuit_grid_model:set_node(3, 4, CircuitGridNode:new{node_type = CircuitNodeTypes.IDEN})
 
-circuit_grid_model:set_node(3, 5, CircuitGridNode:new{node_type = CircuitNodeTypes.X, 0, 0})
+circuit_grid_model:set_node(3, 5, CircuitGridNode:new{node_type = CircuitNodeTypes.X, 0, 1})
 circuit_grid_model:set_node(2, 5, CircuitGridNode:new{node_type = CircuitNodeTypes.TRACE})
 
 circuit_grid_model:set_node(1, 6, CircuitGridNode:new{node_type = CircuitNodeTypes.IDEN})
-circuit_grid_model:set_node(3, 6, CircuitGridNode:new{node_type = CircuitNodeTypes.Z, math.pi/4, 1})
+circuit_grid_model:set_node(3, 6, CircuitGridNode:new{node_type = CircuitNodeTypes.Z, math.pi/4, 2})
 
-circuit_grid_model:set_node(3, 7, CircuitGridNode:new{node_type = CircuitNodeTypes.X, 0, 0, 1})
+circuit_grid_model:set_node(3, 7, CircuitGridNode:new{node_type = CircuitNodeTypes.X, 0, 0, 2})
 
-circuit_grid_model:set_node(2, 8, CircuitGridNode:new{node_type = CircuitNodeTypes.H, 0, 2})
+circuit_grid_model:set_node(2, 8, CircuitGridNode:new{node_type = CircuitNodeTypes.H, 0, 3})
 circuit_grid_model:set_node(1, 8, CircuitGridNode:new{node_type = CircuitNodeTypes.IDEN})
 
-circuit_grid_model:set_node(2, 9, CircuitGridNode:new{node_type = CircuitNodeTypes.Y, 0, 0})
+circuit_grid_model:set_node(2, 9, CircuitGridNode:new{node_type = CircuitNodeTypes.Y, 0, 1})
 circuit_grid_model:set_node(3, 9, CircuitGridNode:new{node_type = CircuitNodeTypes.IDEN})
 
-circuit_grid_model:set_node(3, 10, CircuitGridNode:new{node_type = CircuitNodeTypes.Z, 0, 0})
+circuit_grid_model:set_node(3, 10, CircuitGridNode:new{node_type = CircuitNodeTypes.Z, 0, 1})
 circuit_grid_model:set_node(2, 10, CircuitGridNode:new{node_type = CircuitNodeTypes.TRACE})
 
 circuit_grid_model:set_node(1, 11, CircuitGridNode:new{node_type = CircuitNodeTypes.IDEN})
 
-circuit_grid_model:set_node(3, 12, CircuitGridNode:new{node_type = CircuitNodeTypes.SWAP, 0, 1, -1, 0})
+circuit_grid_model:set_node(3, 12, CircuitGridNode:new{node_type = CircuitNodeTypes.SWAP, 0, 1, -1, 1})
 
-circuit_grid_model:set_node(1, 13, CircuitGridNode:new{node_type = CircuitNodeTypes.X, 0, 1, 2})
+circuit_grid_model:set_node(1, 13, CircuitGridNode:new{node_type = CircuitNodeTypes.X, 0, 2, 3})
 
 print(circuit_grid_model:to_string())
 
-print('qasm: ', circuit_grid_model:compute_circuit())
+print('-- START qasm --')
+print(circuit_grid_model:compute_circuit())
+print('-- END qasm --')
 
 
 
