@@ -250,10 +250,12 @@ function CircuitGridModel:compute_circuit()
                     if node.ctrl_a ~= -1 then
                         -- Controlled Swap
                         qasm_str = qasm_str .. 'cswap q[' .. tostring(node.ctrl_a) .. '],'
-                        qasm_str = qasm_str .. 'q[' .. tostring(wire_num) .. '];\n'
+                        qasm_str = qasm_str .. 'q[' .. tostring(wire_num) .. '],'
+                        qasm_str = qasm_str .. 'q[' .. tostring(node.swap) .. '];\n'
                     else
                         -- Swap gate
-                        qasm_str = qasm_str .. 'swap q[' .. tostring(wire_num) .. '];\n'
+                        qasm_str = qasm_str .. 'swap q[' .. tostring(wire_num) .. '],'
+                        qasm_str = qasm_str .. 'q[' .. tostring(node.swap) .. '];\n'
                     end
                 else
                     print("Unknown gate!")
@@ -358,8 +360,8 @@ circuit_grid_model:set_node(1, 11, CircuitGridNode:new{node_type = CircuitNodeTy
 circuit_grid_model:set_node(2, 11, CircuitGridNode:new{node_type = CircuitNodeTypes.SWAP, 
         radians = 0, ctrl_a = -1, ctrl_b = -1, swap = 3})
 
-circuit_grid_model:set_node(2, 12, CircuitGridNode:new{node_type = CircuitNodeTypes.SWAP, 
-        radians = 0, ctrl_a = 1, ctrl_b = -1, swap = 1})
+circuit_grid_model:set_node(3, 12, CircuitGridNode:new{node_type = CircuitNodeTypes.SWAP, 
+        radians = 0, ctrl_a = 2, ctrl_b = -1, swap = 1})
 
 circuit_grid_model:set_node(1, 13, CircuitGridNode:new{node_type = CircuitNodeTypes.X, 
         radians = 0, ctrl_a = 2, ctrl_b = 3})
