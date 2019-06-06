@@ -75,17 +75,19 @@ function CircuitGridModel:get_node_gate_part (wire_num, column_num)
     else
         --print("TODO: Handle if node is EMPTY")
         -- Check for control nodes from gates in other nodes in this column
-        --[[ TODO: make next lines work
-        local nodes_in_column = self.nodes[:, column_num]
-            for idx in range(self.max_wires):
-                if idx != wire_num:
-                    other_node = nodes_in_column[idx]
-                    if other_node:
-                        if other_node.ctrl_a == wire_num or other_node.ctrl_b == wire_num:
-                            return node_types.CTRL
-                        elif other_node.swap == wire_num:
-                            return node_types.SWAP
-        --]]
+        local nodes_in_column = self:get_nodes_in_column(column_num)
+        for idx = 1, self.max_wires do
+            if idx ~= wire_num then
+                other_node = nodes_in_column[idx]
+                if other_node then
+                    if other_node.ctrl_a == wire_num or other_node.ctrl_b == wire_num then
+                        return CircuitNodeTypes.CTRL
+                    elseif other_node.swap == wire_num then
+                        return CircuitNodeTypes.SWAP
+                    end
+                end
+            end
+        end
     end
     return CircuitNodeTypes.EMPTY   
 end
@@ -114,23 +116,20 @@ x            nodes_in_column = self.nodes[:, column_num]
 --]]
 
 function CircuitGridModel:get_gate_wire_for_control_node(control_wire_num, column_num)
-    -- TODO: Implement following lines
-    --[[
-        -- Get wire for gate that belongs to a control node on the given wire
-        gate_wire_num = -1
-        nodes_in_column = self.nodes[:, column_num]
-        for wire_idx in range(self.max_wires):
-            if wire_idx != control_wire_num:
-                other_node = nodes_in_column[wire_idx]
-                if other_node:
-                    if other_node.ctrl_a == control_wire_num or \
-                            other_node.ctrl_b == control_wire_num:
-                        gate_wire_num =  wire_idx
-                        # print("Found gate: ",
-                        #       self.get_node_gate_part(gate_wire_num, column_num),
-                        #       " on wire: " , gate_wire_num)
-        return gate_wire_num
-    --]]
+    -- TODO: Test this function
+    -- Get wire for gate that belongs to a control node on the given wire
+    local gate_wire_num = -1
+    local nodes_in_column = self:get_nodes_in_column(column_num)
+    for wire_idx = 1, self.max_wires do
+        if wire_idx ~= control_wire_num then
+            other_node = nodes_in_column[wire_idx]
+            if other_node then
+                if other_node.ctrl_a == control_wire_num or other_node.ctrl_b == control_wire_num then
+                    gate_wire_num = wire_idx
+                end
+            end
+        end
+    end
 end
 
 
