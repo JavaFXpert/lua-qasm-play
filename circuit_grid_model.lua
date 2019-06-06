@@ -216,6 +216,38 @@ function CircuitGridModel:compute_circuit()
                             qasm_str = qasm_str .. 'q[' .. tostring(wire_num) .. '];\n'
                         end
                     end
+                elseif node.node_type == CircuitNodeTypes.S then
+                    -- S gate
+                    qasm_str = qasm_str .. 's q[' .. tostring(wire_num) .. '];\n'
+                elseif node.node_type == CircuitNodeTypes.SDG then
+                    -- S dagger gate
+                    qasm_str = qasm_str .. 'sdg q[' .. tostring(wire_num) .. '];\n'
+                elseif node.node_type == CircuitNodeTypes.T then
+                    -- T gate
+                    qasm_str = qasm_str .. 't q[' .. tostring(wire_num) .. '];\n'
+                elseif node.node_type == CircuitNodeTypes.SDG then
+                    -- T dagger gate
+                    qasm_str = qasm_str .. 'tdg q[' .. tostring(wire_num) .. '];\n'
+                elseif node.node_type == CircuitNodeTypes.H then
+                    if node.ctrl_a ~= -1 then
+                        -- Controlled Hadamard
+                        qasm_str = qasm_str .. 'ch q[' .. tostring(node.ctrl_a) .. '],'
+                        qasm_str = qasm_str .. 'q[' .. tostring(wire_num) .. '],'
+                    else
+                        -- Hadamard gate
+                        qasm_str = qasm_str .. 'h q[' .. tostring(wire_num) .. '];\n'
+                    end
+                elseif node.node_type == CircuitNodeTypes.SWAP then
+                    if node.ctrl_a ~= -1 then
+                        -- Controlled Swap
+                        qasm_str = qasm_str .. 'cswap q[' .. tostring(node.ctrl_a) .. '],'
+                        qasm_str = qasm_str .. 'q[' .. tostring(wire_num) .. '],'
+                    else
+                        -- Swap gate
+                        qasm_str = qasm_str .. 'swap q[' .. tostring(wire_num) .. '];\n'
+                    end
+                else
+                    print("Unknown gate!")
                 end
             end
          end
@@ -228,43 +260,6 @@ function CircuitGridModel:compute_circuit()
     -- TODO: Implement following lines
     --[[
 
-x                        else:
-x                            # Rotation around Y axis
-x                            qc.ry(node.radians, qr[wire_num])
-                    elif node.node_type == node_types.Z:
-                        if node.radians == 0:
-                            if node.ctrl_a != -1:
-                                # Controlled Z gate
-                                qc.cz(qr[node.ctrl_a], qr[wire_num])
-                            else:
-                                # Pauli-Z gate
-                                qc.z(qr[wire_num])
-                        else:
-                            if node.ctrl_a != -1:
-                                # Controlled rotation around the Z axis
-                                qc.crz(node.radians, qr[node.ctrl_a], qr[wire_num])
-                            else:
-                                # Rotation around Z axis
-                                qc.rz(node.radians, qr[wire_num])
-                    elif node.node_type == node_types.S:
-                        # S gate
-                        qc.s(qr[wire_num])
-                    elif node.node_type == node_types.SDG:
-                        # S dagger gate
-                        qc.sdg(qr[wire_num])
-                    elif node.node_type == node_types.T:
-                        # T gate
-                        qc.t(qr[wire_num])
-                    elif node.node_type == node_types.TDG:
-                        # T dagger gate
-                        qc.tdg(qr[wire_num])
-                    elif node.node_type == node_types.H:
-                        if node.ctrl_a != -1:
-                            # Controlled Hadamard
-                            qc.ch(qr[node.ctrl_a], qr[wire_num])
-                        else:
-                            # Hadamard gate
-                            qc.h(qr[wire_num])
                     elif node.node_type == node_types.SWAP:
                         if node.ctrl_a != -1:
                             # Controlled Swap
