@@ -44,6 +44,16 @@ function CircuitGridModel:create_nodes_array ()
 end
 
 
+function CircuitGridModel:get_nodes_in_column (column_num)
+    self.nodes_in_column = {}
+
+    for row_num=1, self.max_wires do
+        self.nodes_in_column[row_num] = self.nodes[row_num][column_num]
+    end
+    return self.nodes_in_column
+end
+
+
 function CircuitGridModel:set_node (wire_num, column_num, circuit_grid_node)
     -- First, embed the wire and column locations in the node
     circuit_grid_node.wire_num = wire_num
@@ -343,6 +353,8 @@ circuit_grid_model:set_node(3, 12, CircuitGridNode:new{node_type = CircuitNodeTy
 circuit_grid_model:set_node(1, 13, CircuitGridNode:new{node_type = CircuitNodeTypes.X, 0, 2, 3})
 
 print(circuit_grid_model:to_string())
+
+print(circuit_grid_model:get_nodes_in_column(1))
 
 print('-- START qasm --')
 print(circuit_grid_model:compute_circuit())
